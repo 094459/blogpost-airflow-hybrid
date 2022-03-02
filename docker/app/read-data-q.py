@@ -8,10 +8,9 @@ import json
 import socket
 def query_with_fetchone(query2run,secret,region):
     try:
-        #Using local config file
-        #dbconfig = read_db_config()
-        #conn = MySQLConnection(**dbconfig)
-        # When using AWS Secrets Manager 
+        # Grab MySQL connection and database settings. We areusing AWS Secrets Manager 
+        # but you could use another service like Hashicorp Vault
+        # We cannot use Apache Airflow to store these as this script runs stand alone
         secret_name = secret
         region_name = region
         session = boto3.session.Session()
@@ -25,16 +24,17 @@ def query_with_fetchone(query2run,secret,region):
         un=info['username']
         hs=info['host']
         db=info['database']
+        # Output to the log so we can see and confirm WHERE we are running and WHAT
+        # we are connecting to
         
         print("Connecting to ",str(hs)," database ", str(db), " as user ", str(un))
         print("Database host IP is :", socket.gethostbyname(hs))
+        print("Source IP is ", socket.gethostname())
 
         conn = MySQLConnection(user=un, password=pw, host=hs, database=db)
         cursor = conn.cursor()
-        #query="select * from customers WHERE location = '{country}' AND (date BETWEEN '{start}' AND '{end}')".format(country=country,start=start,end=end)
         query=query2run
         print("Query is", str(query))
-        #cursor.execute("select * from customers WHERE location = '{country}' AND (date BETWEEN '{start}' AND '{end}')".format(country=country,start=start,end=end))
         cursor.execute(query)
         records = cursor.fetchall()
         c = csv.writer(open("temp.csv","w"))
@@ -50,6 +50,7 @@ def query_with_fetchone(query2run,secret,region):
         cursor.close()
         conn.close()
 def upload_to_s3(s3bucket,s3folder,region):
+    # We will upload the temp (temp.csv) file and copy it based on the input params of the script (bucket and dir/file)
     try:
         s3 = boto3.client('s3', region_name=region)
         s3.upload_file('temp.csv',s3bucket,s3folder)
@@ -64,6 +65,12 @@ if __name__ == '__main__':
         arg = sys.argv[2]
     except IndexError:
         raise SystemExit(f"Usage: {sys.argv[0]} <s3 bucket><s3 file><query><secret><region>")
+    # The script needs the following arguments to run
+    # 1. Target S3 bucket where the output of the SQL script will be copied
+    # 2. Target S3 folder/filename 
+    # 3. The query to execute
+    # 4. The parameter store (we use AWS Secrets) which holds the values on where to find the MySQL database
+    # 5. The AWS region
     s3bucket=sys.argv[1]
     s3folder=sys.argv[2]
     query2run=sys.argv[3]
@@ -77,4 +84,8 @@ if __name__ == '__main__':
     # python app/read-data-q.py ricsue-airflow-hybrid period1/temp.csv "select * from customers WHERE location = 'Poland' AND (date BETWEEN '2022-01-01 14:15:55' AND '2022-09-29 10:15:55')" rds-airflow-hybrid eu-west-2
     # for local/remote based MySQL
     # python app/read-data-q.py ricsue-airflow-hybrid period1/temp2.csv "select * from customers WHERE location = 'China' AND (date BETWEEN '2022-01-01 14:15:55' AND '2022-09-29 10:15:55')" localmysql-airflow-hybrid eu-west-2
+    # other queries you can try, for example 
+    # "select * from customers WHERE location = '{country}' AND (date BETWEEN '{start}' AND '{end}')".format(country=country,start=start,end=end)
+
+        
     
