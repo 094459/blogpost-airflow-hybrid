@@ -35,14 +35,14 @@ def create_task(ti):
         containerDefinitions=[
             {
                 "name": "airflow-hybrid-boto3",
-                "image": "public.ecr.aws/a4b5h6u6/beachgeek:latest",
+                "image": "public.ecr.aws/xxx/xxx:latest",
                 "cpu": 0,
                 "portMappings": [],
                 "essential": True,
                 "environment": [],
                 "mountPoints": [],
                 "volumesFrom": [],
-                "command": ["ricsue-airflow-hybrid","period1/temp.csv", "select * from customers WHERE location = \"China\"", "rds-airflow-hybrid","eu-west-2"],
+                "command": ["ricsue-airflow-hybrid","period1/temp.csv", "select * from customers WHERE location = \"Spain\"", "rds-airflow-hybrid","eu-west-2"],
                 "logConfiguration": {
                     "logDriver": "awslogs",
                     "options": {
@@ -53,8 +53,8 @@ def create_task(ti):
                 }
             }
         ],
-        taskRoleArn="arn:aws:iam::704533066374:role/ecsTaskExecutionRole",
-        executionRoleArn="arn:aws:iam::704533066374:role/ecsTaskExecutionRole",
+        taskRoleArn="arn:aws:iam::xxx:role/ecsTaskExecutionRole",
+        executionRoleArn="arn:aws:iam::xxxx:role/ecsTaskExecutionRole",
         family= "test-external",
         networkMode="bridge",
         requiresCompatibilities= [
@@ -68,7 +68,6 @@ def create_task(ti):
     new_taskdef=json.dumps(response['taskDefinition']['revision'], indent=4, default=str)
     print("TaskDef is now at :" + str(new_taskdef))
     return new_taskdef
-    #ti.xcom_push(key='new_taskdef', value=new_taskdef)
 
 # Function that will run our ECS Task
 def run_task(ti):
