@@ -1,0 +1,746 @@
+{
+  "Resources": {
+    "hybridairflowecsrole53C10A86": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ssm.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/AmazonSSMManagedInstanceCore"
+              ]
+            ]
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+              ]
+            ]
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecsrole/Resource"
+      }
+    },
+    "hybridairflowecscluster7A436173": {
+      "Type": "AWS::ECS::Cluster",
+      "Properties": {
+        "ClusterName": "hybrid-airflow-cluster"
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/Resource"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupInstanceSecurityGroup486B716F": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/InstanceSecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup"
+          }
+        ],
+        "VpcId": {
+          "Fn::ImportValue": "ecs-anywhere-vpc:ExportsOutputRefmydcvpnvpcC99028A5E0C4BB86"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/InstanceSecurityGroup/Resource"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupInstanceRole935232EC": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/InstanceRole/Resource"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupInstanceRoleDefaultPolicy69FE5872": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ecs:DeregisterContainerInstance",
+                "ecs:RegisterContainerInstance",
+                "ecs:Submit*"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "hybridairflowecscluster7A436173",
+                  "Arn"
+                ]
+              }
+            },
+            {
+              "Action": [
+                "ecs:Poll",
+                "ecs:StartTelemetrySession"
+              ],
+              "Condition": {
+                "ArnEquals": {
+                  "ecs:cluster": {
+                    "Fn::GetAtt": [
+                      "hybridairflowecscluster7A436173",
+                      "Arn"
+                    ]
+                  }
+                }
+              },
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Action": [
+                "ecs:DiscoverPollEndpoint",
+                "ecr:GetAuthorizationToken",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "hybridairflowecsclusterx86AutoScalingGroupInstanceRoleDefaultPolicy69FE5872",
+        "Roles": [
+          {
+            "Ref": "hybridairflowecsclusterx86AutoScalingGroupInstanceRole935232EC"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/InstanceRole/DefaultPolicy/Resource"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupInstanceProfile6CD4AC0B": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "hybridairflowecsclusterx86AutoScalingGroupInstanceRole935232EC"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/InstanceProfile"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupLaunchConfig39A96B38": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Properties": {
+        "ImageId": {
+          "Ref": "SsmParameterValueawsserviceecsoptimizedamiamazonlinux2recommendedimageidC96584B6F00A464EAD1953AFF4B05118Parameter"
+        },
+        "InstanceType": "t2.xlarge",
+        "IamInstanceProfile": {
+          "Ref": "hybridairflowecsclusterx86AutoScalingGroupInstanceProfile6CD4AC0B"
+        },
+        "SecurityGroups": [
+          {
+            "Fn::GetAtt": [
+              "hybridairflowecsclusterx86AutoScalingGroupInstanceSecurityGroup486B716F",
+              "GroupId"
+            ]
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash\necho ECS_CLUSTER=",
+                {
+                  "Ref": "hybridairflowecscluster7A436173"
+                },
+                " >> /etc/ecs/ecs.config\nsudo iptables --insert FORWARD 1 --in-interface docker+ --destination 169.254.169.254/32 --jump DROP\nsudo service iptables save\necho ECS_AWSVPC_BLOCK_IMDS=true >> /etc/ecs/ecs.config"
+              ]
+            ]
+          }
+        }
+      },
+      "DependsOn": [
+        "hybridairflowecsclusterx86AutoScalingGroupInstanceRoleDefaultPolicy69FE5872",
+        "hybridairflowecsclusterx86AutoScalingGroupInstanceRole935232EC"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/LaunchConfig"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupASG25BA351A": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "MaxSize": "1",
+        "MinSize": "1",
+        "DesiredCapacity": "1",
+        "LaunchConfigurationName": {
+          "Ref": "hybridairflowecsclusterx86AutoScalingGroupLaunchConfig39A96B38"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "PropagateAtLaunch": true,
+            "Value": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup"
+          }
+        ],
+        "VPCZoneIdentifier": [
+          {
+            "Fn::ImportValue": "ecs-anywhere-vpc:ExportsOutputRefmydcvpnvpcprivateSubnet1Subnet907447937118DADD"
+          },
+          {
+            "Fn::ImportValue": "ecs-anywhere-vpc:ExportsOutputRefmydcvpnvpcprivateSubnet2Subnet2F863D5508703380"
+          }
+        ]
+      },
+      "UpdatePolicy": {
+        "AutoScalingReplacingUpdate": {
+          "WillReplace": true
+        },
+        "AutoScalingScheduledAction": {
+          "IgnoreUnmodifiedGroupSizeProperties": true
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/ASG"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupDrainECSHookFunctionServiceRole2AE09E99": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+              ]
+            ]
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/DrainECSHook/Function/ServiceRole/Resource"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupDrainECSHookFunctionServiceRoleDefaultPolicy3B025241": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ec2:DescribeInstances",
+                "ec2:DescribeInstanceAttribute",
+                "ec2:DescribeInstanceStatus",
+                "ec2:DescribeHosts"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Action": "autoscaling:CompleteLifecycleAction",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":autoscaling:eu-west-2:704533066374:autoScalingGroup:*:autoScalingGroupName/",
+                    {
+                      "Ref": "hybridairflowecsclusterx86AutoScalingGroupASG25BA351A"
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              "Action": [
+                "ecs:DescribeContainerInstances",
+                "ecs:DescribeTasks"
+              ],
+              "Condition": {
+                "ArnEquals": {
+                  "ecs:cluster": {
+                    "Fn::GetAtt": [
+                      "hybridairflowecscluster7A436173",
+                      "Arn"
+                    ]
+                  }
+                }
+              },
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Action": [
+                "ecs:ListContainerInstances",
+                "ecs:SubmitContainerStateChange",
+                "ecs:SubmitTaskStateChange"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "hybridairflowecscluster7A436173",
+                  "Arn"
+                ]
+              }
+            },
+            {
+              "Action": [
+                "ecs:UpdateContainerInstancesState",
+                "ecs:ListTasks"
+              ],
+              "Condition": {
+                "ArnEquals": {
+                  "ecs:cluster": {
+                    "Fn::GetAtt": [
+                      "hybridairflowecscluster7A436173",
+                      "Arn"
+                    ]
+                  }
+                }
+              },
+              "Effect": "Allow",
+              "Resource": "*"
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "hybridairflowecsclusterx86AutoScalingGroupDrainECSHookFunctionServiceRoleDefaultPolicy3B025241",
+        "Roles": [
+          {
+            "Ref": "hybridairflowecsclusterx86AutoScalingGroupDrainECSHookFunctionServiceRole2AE09E99"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/DrainECSHook/Function/ServiceRole/DefaultPolicy/Resource"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupDrainECSHookFunctionD207A6AA": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "ZipFile": "import boto3, json, os, time\n\necs = boto3.client('ecs')\nautoscaling = boto3.client('autoscaling')\n\n\ndef lambda_handler(event, context):\n  print(json.dumps(event))\n  cluster = os.environ['CLUSTER']\n  snsTopicArn = event['Records'][0]['Sns']['TopicArn']\n  lifecycle_event = json.loads(event['Records'][0]['Sns']['Message'])\n  instance_id = lifecycle_event.get('EC2InstanceId')\n  if not instance_id:\n    print('Got event without EC2InstanceId: %s', json.dumps(event))\n    return\n\n  instance_arn = container_instance_arn(cluster, instance_id)\n  print('Instance %s has container instance ARN %s' % (lifecycle_event['EC2InstanceId'], instance_arn))\n\n  if not instance_arn:\n    return\n\n  while has_tasks(cluster, instance_arn):\n    time.sleep(10)\n\n  try:\n    print('Terminating instance %s' % instance_id)\n    autoscaling.complete_lifecycle_action(\n        LifecycleActionResult='CONTINUE',\n        **pick(lifecycle_event, 'LifecycleHookName', 'LifecycleActionToken', 'AutoScalingGroupName'))\n  except Exception as e:\n    # Lifecycle action may have already completed.\n    print(str(e))\n\n\ndef container_instance_arn(cluster, instance_id):\n  \"\"\"Turn an instance ID into a container instance ARN.\"\"\"\n  arns = ecs.list_container_instances(cluster=cluster, filter='ec2InstanceId==' + instance_id)['containerInstanceArns']\n  if not arns:\n    return None\n  return arns[0]\n\n\ndef has_tasks(cluster, instance_arn):\n  \"\"\"Return True if the instance is running tasks for the given cluster.\"\"\"\n  instances = ecs.describe_container_instances(cluster=cluster, containerInstances=[instance_arn])['containerInstances']\n  if not instances:\n    return False\n  instance = instances[0]\n\n  if instance['status'] == 'ACTIVE':\n    # Start draining, then try again later\n    set_container_instance_to_draining(cluster, instance_arn)\n    return True\n\n  tasks = instance['runningTasksCount'] + instance['pendingTasksCount']\n  print('Instance %s has %s tasks' % (instance_arn, tasks))\n\n  return tasks > 0\n\n\ndef set_container_instance_to_draining(cluster, instance_arn):\n  ecs.update_container_instances_state(\n      cluster=cluster,\n      containerInstances=[instance_arn], status='DRAINING')\n\n\ndef pick(dct, *keys):\n  \"\"\"Pick a subset of a dict.\"\"\"\n  return {k: v for k, v in dct.items() if k in keys}\n"
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "hybridairflowecsclusterx86AutoScalingGroupDrainECSHookFunctionServiceRole2AE09E99",
+            "Arn"
+          ]
+        },
+        "Environment": {
+          "Variables": {
+            "CLUSTER": {
+              "Ref": "hybridairflowecscluster7A436173"
+            }
+          }
+        },
+        "Handler": "index.lambda_handler",
+        "Runtime": "python3.6",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup"
+          }
+        ],
+        "Timeout": 310
+      },
+      "DependsOn": [
+        "hybridairflowecsclusterx86AutoScalingGroupDrainECSHookFunctionServiceRoleDefaultPolicy3B025241",
+        "hybridairflowecsclusterx86AutoScalingGroupDrainECSHookFunctionServiceRole2AE09E99"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/DrainECSHook/Function/Resource"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupDrainECSHookFunctionAllowInvokeecsanywheretaskdefhybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookTopicE902CCAB9B3A7675": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "hybridairflowecsclusterx86AutoScalingGroupDrainECSHookFunctionD207A6AA",
+            "Arn"
+          ]
+        },
+        "Principal": "sns.amazonaws.com",
+        "SourceArn": {
+          "Ref": "hybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookTopic9FF83F7F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/DrainECSHook/Function/AllowInvoke:ecsanywheretaskdefhybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookTopicE902CCAB"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupDrainECSHookFunctionTopic9B87670D": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Protocol": "lambda",
+        "TopicArn": {
+          "Ref": "hybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookTopic9FF83F7F"
+        },
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "hybridairflowecsclusterx86AutoScalingGroupDrainECSHookFunctionD207A6AA",
+            "Arn"
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/DrainECSHook/Function/Topic/Resource"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookRole06266C34": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "autoscaling.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/LifecycleHookDrainHook/Role/Resource"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookRoleDefaultPolicy7AED890E": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "hybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookTopic9FF83F7F"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "hybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookRoleDefaultPolicy7AED890E",
+        "Roles": [
+          {
+            "Ref": "hybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookRole06266C34"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/LifecycleHookDrainHook/Role/DefaultPolicy/Resource"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookTopic9FF83F7F": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/LifecycleHookDrainHook/Topic/Resource"
+      }
+    },
+    "hybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHook368FBC3E": {
+      "Type": "AWS::AutoScaling::LifecycleHook",
+      "Properties": {
+        "AutoScalingGroupName": {
+          "Ref": "hybridairflowecsclusterx86AutoScalingGroupASG25BA351A"
+        },
+        "LifecycleTransition": "autoscaling:EC2_INSTANCE_TERMINATING",
+        "DefaultResult": "CONTINUE",
+        "HeartbeatTimeout": 300,
+        "NotificationTargetARN": {
+          "Ref": "hybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookTopic9FF83F7F"
+        },
+        "RoleARN": {
+          "Fn::GetAtt": [
+            "hybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookRole06266C34",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "hybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookRoleDefaultPolicy7AED890E",
+        "hybridairflowecsclusterx86AutoScalingGroupLifecycleHookDrainHookRole06266C34"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ecscluster/x86AutoScalingGroup/LifecycleHookDrainHook/Resource"
+      }
+    },
+    "hybridairflowApacheAirflowTaskDefTaskRole5081E9BE": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ApacheAirflowTaskDef/TaskRole/Resource"
+      }
+    },
+    "hybridairflowApacheAirflowTaskDef5A130352": {
+      "Type": "AWS::ECS::TaskDefinition",
+      "Properties": {
+        "ContainerDefinitions": [
+          {
+            "Cpu": 100,
+            "Essential": true,
+            "Image": {
+              "Fn::Join": [
+                "",
+                [
+                  "704533066374.dkr.ecr.eu-west-2.",
+                  {
+                    "Ref": "AWS::URLSuffix"
+                  },
+                  "/hybrid-airflow:airflw"
+                ]
+              ]
+            },
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "LogGroupF5B46931"
+                },
+                "awslogs-stream-prefix": "hybrid-airflow",
+                "awslogs-region": "eu-west-2"
+              }
+            },
+            "Memory": 1024,
+            "Name": "Hybrid-ELT-TaskDef"
+          }
+        ],
+        "ExecutionRoleArn": {
+          "Fn::GetAtt": [
+            "hybridairflowApacheAirflowTaskDefExecutionRole23D3CB5F",
+            "Arn"
+          ]
+        },
+        "Family": "apache-airflow",
+        "NetworkMode": "host",
+        "RequiresCompatibilities": [
+          "EC2"
+        ],
+        "TaskRoleArn": {
+          "Fn::GetAtt": [
+            "hybridairflowApacheAirflowTaskDefTaskRole5081E9BE",
+            "Arn"
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ApacheAirflowTaskDef/Resource"
+      }
+    },
+    "hybridairflowApacheAirflowTaskDefExecutionRole23D3CB5F": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ApacheAirflowTaskDef/ExecutionRole/Resource"
+      }
+    },
+    "hybridairflowApacheAirflowTaskDefExecutionRoleDefaultPolicy32A07870": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":ecr:eu-west-2:704533066374:repository/hybrid-airflow"
+                  ]
+                ]
+              }
+            },
+            {
+              "Action": "ecr:GetAuthorizationToken",
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "LogGroupF5B46931",
+                  "Arn"
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "hybridairflowApacheAirflowTaskDefExecutionRoleDefaultPolicy32A07870",
+        "Roles": [
+          {
+            "Ref": "hybridairflowApacheAirflowTaskDefExecutionRole23D3CB5F"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/hybrid-airflow-ApacheAirflowTaskDef/ExecutionRole/DefaultPolicy/Resource"
+      }
+    },
+    "LogGroupF5B46931": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/ecs/hybrid-airflow",
+        "RetentionInDays": 731
+      },
+      "UpdateReplacePolicy": "Retain",
+      "DeletionPolicy": "Retain",
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/LogGroup/Resource"
+      }
+    },
+    "CDKMetadata": {
+      "Type": "AWS::CDK::Metadata",
+      "Properties": {
+        "Analytics": "v2:deflate64:H4sIAAAAAAAA/1WO0U7DMAxFv2XvWbZuQvCIQBriLer4gczzhFkbV3aiqYr67ySdgPJ0r69sn9vY3Owe7Xb17G+6hvN1k4EFbT5GD1fTonISQPN6CX+eg0ZJEGvqvPgeI8pk6gcNWm7TSUFoiMSh7vybP3ggqOlspsk02/2SXzWT721uubuDqzruCMaZ+OveSw8fAJ3whTqcDMKu0BGSUBzfhNMw45fBZDrfn87e5kMK8NNw6R1KT6plqg/FtjiwUmQZX7xiKezG+Mlhs7dP9mH1pURrSSFSj7a96zdR7dSdVQEAAA=="
+      },
+      "Metadata": {
+        "aws:cdk:path": "ecs-anywhere-taskdef/CDKMetadata/Default"
+      }
+    }
+  },
+  "Parameters": {
+    "SsmParameterValueawsserviceecsoptimizedamiamazonlinux2recommendedimageidC96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+      "Default": "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
+    }
+  }
+}

@@ -45,6 +45,7 @@ def query_with_fetchone(query2run,secret,region):
 
     except Error as e:
         print(e)
+        sys.exit(1)
 
     finally:
         cursor.close()
@@ -59,6 +60,7 @@ def upload_to_s3(s3bucket,s3folder,region):
         return False
     except Error as e:
         print(e)
+        sys.exit(1)
 
 if __name__ == '__main__':
     try:
