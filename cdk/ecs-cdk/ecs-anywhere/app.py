@@ -6,7 +6,6 @@ from aws_cdk import core
 
 from ecs_anywhere.ecs_anywhere_vpc import EcsAnywhereVPCStack
 from ecs_anywhere.ecs_anywhere_taskdef import EcsAnywhereTaskDefStack
-from ecs_anywhere.ecs_anywhere_ecs import EcsAnywhereECSClusterStack
 
 env_EU=core.Environment(region="eu-west-2", account="704533066374")
 props = {
@@ -14,6 +13,7 @@ props = {
     'ecr-repo': 'hybrid-airflow',
     'image-tag' : 'airflw',
     'awsvpccidr':'10.0.0.0/16',
+    's3':'ricsue-airflow-hybrid'
     }
 
 app = core.App()
@@ -31,14 +31,6 @@ mydc_ecs_cicd = EcsAnywhereTaskDefStack(
     env=env_EU,
     vpc=mydc_vpc.vpc,
     props=props  
-)
-
-mydc_ecs = EcsAnywhereECSClusterStack(
-    scope=app,
-    id="ecs-anywhere-cluster",
-    env=env_EU,
-    vpc=mydc_vpc.vpc,
-    props=props
 )
 
 app.synth()
