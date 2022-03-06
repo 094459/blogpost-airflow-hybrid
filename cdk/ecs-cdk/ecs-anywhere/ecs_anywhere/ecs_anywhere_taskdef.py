@@ -130,6 +130,9 @@ class EcsAnywhereTaskDefStack(core.Stack):
             network_mode=ecs.NetworkMode.HOST,
             task_role=task_def_policy_document_role
             )
+        
+        ## For the purpose of the demo, these values are coded here. If you were doing 
+        # this properly you would separate these out and make it more re-usable
     
         ec2_task_definition.add_container(
             "Hybrid-ELT-TaskDef",

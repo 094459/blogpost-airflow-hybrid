@@ -108,6 +108,27 @@ class MwaaCdkStackEnv(core.Stack):
                 ),
                 iam.PolicyStatement(
                     actions=[
+                        "ecs:RunTask",
+                        "ecs:DescribeTasks",
+                        "ecs:RegisterTaskDefinition",
+                        "ecs:DescribeTaskDefinition",
+                        "ecs:ListTasks"
+                    ],
+                    effect=iam.Effect.ALLOW,
+                    resources=[
+                        "*"
+                        ],
+                    ),
+                iam.PolicyStatement(
+                    actions=[
+                        "iam:PassRole"
+                    ],
+                    effect=iam.Effect.ALLOW,
+                    resources=[ "*" ],
+                    conditions= { "StringLike": { "iam:PassedToService": "ecs-tasks.amazonaws.com" } },
+                    ),
+                iam.PolicyStatement(
+                    actions=[
                         "kms:Decrypt",
                         "kms:DescribeKey",
                         "kms:GenerateDataKey*",
@@ -134,6 +155,7 @@ class MwaaCdkStackEnv(core.Stack):
             assumed_by=iam.CompositePrincipal(
                 iam.ServicePrincipal("airflow.amazonaws.com"),
                 iam.ServicePrincipal("airflow-env.amazonaws.com"),
+                iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
             ),
             inline_policies={"CDKmwaaPolicyDocument": mwaa_policy_document},
             path="/service-role/"
