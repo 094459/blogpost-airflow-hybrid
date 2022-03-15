@@ -61,7 +61,8 @@ class EcsAnywhereTaskDefStack(core.Stack):
                         "ecs:DescribeTasks",
                         "ecs:RegisterTaskDefinition",
                         "ecs:DescribeTaskDefinition",
-                        "ecs:ListTasks"
+                        "ecs:ListTasks",
+                        "ecs:StopTask"
                     ],
                     effect=iam.Effect.ALLOW,
                     resources=[
@@ -88,7 +89,7 @@ class EcsAnywhereTaskDefStack(core.Stack):
                     ],
                     effect=iam.Effect.ALLOW,
                     resources=[
-                        f"arn:aws:logs:*:*:log-group:/ecs/{props['ecsclustername']}:log-stream:/ecs/*"
+                        f"arn:aws:logs:*:*:log-group:*:log-stream:ecs/*"
                         ]           
                 )
             ]
@@ -140,7 +141,7 @@ class EcsAnywhereTaskDefStack(core.Stack):
             memory_limit_mib=1024,
             cpu=100,
             # Configure CloudWatch logging
-            logging=ecs.LogDrivers.aws_logs(stream_prefix=f"{props['ecsclustername']}",log_group=log_group),
+            logging=ecs.LogDrivers.aws_logs(stream_prefix="ecs",log_group=log_group),
             essential=True,
             command= [ "ricsue-airflow-hybrid", "period1/hq-data.csv", "select * from customers WHERE location = \"Spain\"", "rds-airflow-hybrid", "eu-west-2" ],
             )
