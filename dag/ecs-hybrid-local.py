@@ -23,8 +23,7 @@ with DAG('hybrid_airflow_local_dag', catchup=False, default_args=default_args, s
             ] },
         launch_type="EXTERNAL",
         awslogs_group="/ecs/hybrid-airflow",
-        awslogs_stream_prefix="ecs/Hybrid-ELT-TaskDef",
-        reattach = True
+        awslogs_stream_prefix="ecs/Hybrid-ELT-TaskDef"
     )
     
     localquery
