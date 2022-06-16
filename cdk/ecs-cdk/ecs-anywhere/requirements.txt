@@ -1,7 +1,10 @@
 boto3
-aws_cdk.aws_ecs 
-aws_cdk.aws_ec2 
-aws_cdk.aws_elasticloadbalancingv2
-aws_cdk.aws_iam 
-aws_cdk.aws_efs 
-aws_cdk.core
+aws-cdk-lib==2.2.0
+constructs>=10.0.0,<11.0.0
+#aws_cdk.aws_ecs 
+#aws_cdk.aws_ec2 
+#aws_cdk.aws_elasticloadbalancingv2
+#aws_cdk.aws_iam 
+#aws_cdk.aws_efs 
+#aws_cdk.core
+

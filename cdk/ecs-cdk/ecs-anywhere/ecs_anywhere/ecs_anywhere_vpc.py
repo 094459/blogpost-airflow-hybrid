@@ -3,12 +3,14 @@
 from aws_cdk import (
     aws_iam as iam,
     aws_ec2 as ec2,
-    core
+    Stack,
+    CfnOutput
 )
+from constructs import Construct
 
-class EcsAnywhereVPCStack(core.Stack):
+class EcsAnywhereVPCStack(Stack):
 
-    def __init__(self, scope: core.Construct, id: str, props, **kwargs) -> None:
+    def __init__(self, scope: Construct, id: str, props, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
   
         # Create VPC networking environment
@@ -28,14 +30,14 @@ class EcsAnywhereVPCStack(core.Stack):
                 ec2.SubnetConfiguration(
                     name="private", cidr_mask=24,
                     #reserved=False, subnet_type=ec2.SubnetType.ISOLATED)
-                    reserved=False, subnet_type=ec2.SubnetType.PRIVATE)
+                    reserved=False, subnet_type=ec2.SubnetType.PRIVATE_WITH_NAT)
             ],
             max_azs=2,
             enable_dns_hostnames=True,
             enable_dns_support=True,
             vpn_gateway=False
         )      
-        core.CfnOutput(
+        CfnOutput(
             self,
             id="VPCId",
             value=self.vpc.vpc_id,

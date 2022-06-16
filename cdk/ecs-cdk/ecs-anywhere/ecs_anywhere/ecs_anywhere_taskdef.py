@@ -9,12 +9,14 @@ from aws_cdk import (
     aws_logs as log,
     aws_s3 as s3,
     aws_autoscaling as autoscaling,
-    core
+    Stack,
+    CfnOutput
 )
+from constructs import Construct
 
-class EcsAnywhereTaskDefStack(core.Stack):
+class EcsAnywhereTaskDefStack(Stack):
 
-    def __init__(self, scope: core.Construct, id: str, vpc, props, **kwargs) -> None:
+    def __init__(self, scope: Construct, id: str, vpc, props, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
         airflow_repo = ecr.Repository.from_repository_name(self, "Hybrid-ELT-Repo", repository_name=f"{props['ecr-repo']}")
@@ -27,8 +29,12 @@ class EcsAnywhereTaskDefStack(core.Stack):
             assumed_by=iam.ServicePrincipal("ssm.amazonaws.com"),
             managed_policies=[iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore")]
         )
+        ecsfix = ecscluster_role.node.default_child
+        ecsfix.add_property_override(
+            "AssumeRolePolicyDocument.Statement.0.Principal.Service", "ssm.amazonaws.com"
+        )
         ecscluster_role.add_managed_policy(iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AmazonEC2ContainerServiceforEC2Role"))
-
+        
         ecscluster = ecs.Cluster(
             self,
             f"{props['ecsclustername']}-ecscluster",
@@ -62,7 +68,7 @@ class EcsAnywhereTaskDefStack(core.Stack):
                         "ecs:RegisterTaskDefinition",
                         "ecs:DescribeTaskDefinition",
                         "ecs:ListTasks",
-                        "ecs:StopTask"
+                        "ecs:StopTask" 
                     ],
                     effect=iam.Effect.ALLOW,
                     resources=[
@@ -89,7 +95,7 @@ class EcsAnywhereTaskDefStack(core.Stack):
                     ],
                     effect=iam.Effect.ALLOW,
                     resources=[
-                        f"arn:aws:logs:*:*:log-group:*:log-stream:ecs/*"
+                        f"arn:aws:logs:*:*:log-group:/ecs/{props['ecsclustername']}:log-stream:/ecs/*"
                         ]           
                 )
             ]
@@ -113,6 +119,11 @@ class EcsAnywhereTaskDefStack(core.Stack):
             assumed_by=iam.ServicePrincipal("ssm.amazonaws.com")
         )
 
+        extfix = external_task_def_policy_document_role.node.default_child
+        extfix.add_property_override(
+            "AssumeRolePolicyDocument.Statement.0.Principal.Service", "ssm.amazonaws.com"
+        )
+
         external_managed_SSM_policy = iam.ManagedPolicy.from_aws_managed_policy_name("AmazonSSMManagedInstanceCore")
         external_managed_ECS_policy = iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AmazonEC2ContainerServiceforEC2Role")
         external_task_def_policy_document_role.add_managed_policy(external_managed_SSM_policy)
@@ -127,7 +138,7 @@ class EcsAnywhereTaskDefStack(core.Stack):
         ec2_task_definition = ecs.Ec2TaskDefinition(
             self,
             f"{props['ecsclustername']}-ApacheAirflowTaskDef",
-            family="apache-airflow",
+            family=f"{props['ecstaskdef']}",
             network_mode=ecs.NetworkMode.HOST,
             task_role=task_def_policy_document_role
             )
@@ -143,22 +154,22 @@ class EcsAnywhereTaskDefStack(core.Stack):
             # Configure CloudWatch logging
             logging=ecs.LogDrivers.aws_logs(stream_prefix="ecs",log_group=log_group),
             essential=True,
-            command= [ "ricsue-airflow-hybrid", "period1/hq-data.csv", "select * from customers WHERE location = \"Spain\"", "rds-airflow-hybrid", "eu-west-2" ],
+            command= [ "094459-hybrid-airflow", "hybrid/hq-data.csv", "select * from customers WHERE country = \"Romania\"", "rds-airflow-hybrid", "eu-west-2" ],
             )
 
-        core.CfnOutput(
+        CfnOutput(
             self,
             id="ECSClusterName",
             value=ecscluster.cluster_name,
             description="Name of ECS Cluster created"
         )
-        core.CfnOutput(
+        CfnOutput(
             self,
             id="ECSRoleName",
             value=ecscluster_role.role_name,
             description="Name of ECS Role created"
         )
-        core.CfnOutput(
+        CfnOutput(
             self,
             id="ECSAnywhereRoleName",
             value=external_task_def_policy_document_role.role_name,
