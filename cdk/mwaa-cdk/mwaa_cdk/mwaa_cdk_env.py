@@ -1,16 +1,22 @@
-from aws_cdk import core
-from aws_cdk.core import Tags
-import aws_cdk.aws_ec2 as ec2
-import aws_cdk.aws_s3 as s3
-import aws_cdk.aws_s3_deployment as s3deploy
-import aws_cdk.aws_mwaa as mwaa
-import aws_cdk.aws_iam as iam
-import aws_cdk.aws_kms as kms
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
 
+from aws_cdk import (
+    aws_iam as iam,
+    aws_ec2 as ec2,
+    aws_s3 as s3,
+    aws_s3_deployment as s3deploy,
+    aws_mwaa as mwaa,
+    aws_kms as kms,
+    Stack,
+    CfnOutput,
+    Tags
+)
+from constructs import Construct
 
-class MwaaCdkStackEnv(core.Stack):
+class MwaaCdkStackEnv(Stack):
 
-    def __init__(self, scope: core.Construct, id: str, vpc, mwaa_props,  **kwargs) -> None:
+    def __init__(self, scope: Construct, id: str, vpc, mwaa_props,  **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
         key_suffix = 'Key'
@@ -300,7 +306,7 @@ class MwaaCdkStackEnv(core.Stack):
         managed_airflow.add_override('Properties.AirflowConfigurationOptions', options)
         managed_airflow.add_override('Properties.Tags', tags)
 
-        core.CfnOutput(
+        CfnOutput(
             self,
             id="MWAASecurityGroup",
             value=security_group_id,
