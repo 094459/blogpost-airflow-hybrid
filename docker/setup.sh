@@ -18,8 +18,9 @@ DOCKER_CLI_EXPERIMENTAL=enabled
 REPOSITORY_URI=$AWS_ACCOUNT.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$AWS_ECR_REPO
 
 # Login to ECR
-
-$(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+# Old deprecated
+# $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
 
 # create AWS ECR Repo
 
